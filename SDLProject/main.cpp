@@ -76,7 +76,7 @@ glm::vec3 g_other_movement = glm::vec3(-5.0f, 0.0f, 0.0f);
 glm::vec3 g_ball_position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 g_ball_movement = glm::vec3(1.0f, 0.0f, 0.0f);
 
-float g_player_speed = 3.0f;
+float g_player_speed = 6.0f;
 float g_ball_speed = 7.0f;
 
 bool singleplayer_mode = false;
