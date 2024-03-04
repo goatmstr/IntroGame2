@@ -31,8 +31,8 @@ const int WINDOW_WIDTH = 640,
 WINDOW_HEIGHT = 480;
 
 float BG_RED = 0.0f,
-BG_BLUE = 0.1f,
-BG_GREEN = 0.1f,
+BG_BLUE = 0.7f,
+BG_GREEN = 0.2f,
 BG_OPACITY = 1.0f;
 
 const int VIEWPORT_X = 0,
@@ -42,7 +42,9 @@ VIEWPORT_HEIGHT = WINDOW_HEIGHT;
 
 const char  V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
 F_SHADER_PATH[] = "shaders/fragment_textured.glsl",
-PLAYER_SPRITE_FILEPATH[] = "soph.png";
+BALL_SPRITE_FILEPATH[] = "soccer.png",
+PLAYER_SPRITE_FILEPATH[] = "messi.png",
+OTHER_SPRITE_FILEPATH[] = "ronaldo.png";
 
 const float MILLISECONDS_IN_SECOND = 1000.0;
 const float MINIMUM_COLLISION_DISTANCE = 1.0f;
@@ -68,10 +70,10 @@ g_other_texture_id,
 g_ball_texture_id;
 
 glm::vec3 g_player_position = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 g_player_movement = glm::vec3(5.0f, 0.0f, 0.0f);
+glm::vec3 g_player_movement = glm::vec3(4.5f, 0.0f, 0.0f);
 
 glm::vec3 g_other_position = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 g_other_movement = glm::vec3(-5.0f, 0.0f, 0.0f);
+glm::vec3 g_other_movement = glm::vec3(-4.5f, 0.0f, 0.0f);
 
 glm::vec3 g_ball_position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 g_ball_movement = glm::vec3(1.0f, 0.0f, 0.0f);
@@ -108,7 +110,7 @@ GLuint load_texture(const char* filepath)
 void initialise()
 {
 	SDL_Init(SDL_INIT_VIDEO);
-	g_display_window = SDL_CreateWindow("Pong",
+	g_display_window = SDL_CreateWindow("Soccer Pong",
 		SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 		WINDOW_WIDTH, WINDOW_HEIGHT,
 		SDL_WINDOW_OPENGL);
@@ -137,7 +139,8 @@ void initialise()
 	g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);
 
 	//g_player_texture_id = load_texture(PLAYER_SPRITE_FILEPATH);
-	//g_other_texture_id = load_texture(PLAYER_SPRITE_FILEPATH);
+	//g_other_texture_id = load_texture(OTHER_SPRITE_FILEPATH);
+    //g_ball_texture_id = load_texture(BALL_SPRITE_FILEPATH);
 
 	g_shader_program.SetProjectionMatrix(g_projection_matrix);
 	g_shader_program.SetViewMatrix(g_view_matrix);
@@ -215,10 +218,10 @@ void process_input()
 
 bool check_collision(glm::vec3& position_ball, glm::vec3& position_player, glm::vec3& position_other)
 {
-    float x_distance_p = fabs(position_ball[0] - position_player[0]) - ((1 + 0.25) / 2);
-    float y_distance_p = fabs(position_ball [1] - position_player[1]) - ((1 + 0.25) / 2);
-    float x_distance_o = fabs(position_ball[0] - position_other[0]) - ((1 + 0.25) / 2);
-    float y_distance_o = fabs(position_ball[1] - position_other[1]) - ((1 + 0.25) / 2);
+    float x_distance_p = fabs(position_ball[0] - position_player[0]) - ((1 + 0.30) / 2);
+    float y_distance_p = fabs(position_ball [1] - position_player[1]) - ((1 + 0.30) / 2);
+    float x_distance_o = fabs(position_ball[0] - position_other[0]) - ((1 + 0.30) / 2);
+    float y_distance_o = fabs(position_ball[1] - position_other[1]) - ((1 + 0.30) / 2);
 
     if (x_distance_p < 0.0f && y_distance_p < 0.0f){
         return true;
@@ -247,7 +250,7 @@ void update()
         g_other_position += g_other_movement * g_player_speed * delta_time;
         g_other_model_matrix = glm::translate(g_other_model_matrix, g_other_position);
     }
-    else {
+    else if (!game_over) {
         if (sin(ticks) > 0) { // Using sin for back and forth movement
             g_other_movement = glm::vec3(0.0f, 1.0f, 0.0f);
         }
@@ -286,10 +289,10 @@ void update()
     }
     
     g_ball_matrix = glm::translate(g_ball_matrix, g_ball_position);
-    if (g_ball_position[0] > 6.0f || g_ball_position[0] < -6.0f) {
+    if (g_ball_position[0] > 7.0f || g_ball_position[0] < -7.0f) {
         game_over = true;
     }
-    g_ball_matrix = glm::scale(g_ball_matrix, glm::vec3(0.25f, 0.25f, 0.0f));
+    g_ball_matrix = glm::scale(g_ball_matrix, glm::vec3(0.30f, 0.30f, 0.0f));
 }
 
 
@@ -320,10 +323,10 @@ void render()
     glVertexAttribPointer(g_shader_program.texCoordAttribute, 2, GL_FLOAT, false, 0, texture_coordinates);
     glEnableVertexAttribArray(g_shader_program.texCoordAttribute);
 
+    draw_object(g_ball_matrix, g_ball_texture_id);
     draw_object(g_model_matrix, g_player_texture_id);
     draw_object(g_other_model_matrix, g_other_texture_id);
-    draw_object(g_ball_matrix, g_ball_texture_id);
-
+    
     glDisableVertexAttribArray(g_shader_program.positionAttribute);
     glDisableVertexAttribArray(g_shader_program.texCoordAttribute);
 

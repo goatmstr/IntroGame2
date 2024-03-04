@@ -1,6 +1,6 @@
 ﻿  main.cpp
-C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(218,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(219,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
-C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(220,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
 C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(221,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(222,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(223,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
+C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\main.cpp(224,24): warning C4244: 'initializing': conversion from 'double' to 'float', possible loss of data
   SDLProject.vcxproj -> C:\Users\hbpan\Documents\code\IntroGame\IntroGame2\SDLProject\Debug\SDLProject.exe
