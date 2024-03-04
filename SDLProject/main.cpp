@@ -1,3 +1,13 @@
+/**
+* Author: Hongbin Pan
+* Assignment: Pong Clone
+* Date due: 2024-03-02, 11:59pm
+* I pledge that I have completed this assignment without
+* collaborating with anyone else, in conformance with the
+* NYU School of Engineering Policies and Procedures on
+* Academic Misconduct.
+**/
+
 #define GL_SILENCE_DEPRECATION
 #define GL_SILENCE_DEPRECATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -43,16 +53,19 @@ const GLint TEXTURE_BORDER = 0;
 
 SDL_Window* g_display_window;
 bool g_game_is_running = true;
+bool game_over = false;
 float g_previous_ticks = 0.0f;
 
 ShaderProgram g_shader_program;
 glm::mat4     g_view_matrix,
 g_model_matrix,
 g_projection_matrix,
-g_other_model_matrix;
+g_other_model_matrix,
+g_ball_matrix;
 
 GLuint g_player_texture_id,
-g_other_texture_id;
+g_other_texture_id,
+g_ball_texture_id;
 
 glm::vec3 g_player_position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 g_player_movement = glm::vec3(5.0f, 0.0f, 0.0f);
@@ -60,7 +73,13 @@ glm::vec3 g_player_movement = glm::vec3(5.0f, 0.0f, 0.0f);
 glm::vec3 g_other_position = glm::vec3(0.0f, 0.0f, 0.0f);
 glm::vec3 g_other_movement = glm::vec3(-5.0f, 0.0f, 0.0f);
 
-float g_player_speed = 2.0f;
+glm::vec3 g_ball_position = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 g_ball_movement = glm::vec3(1.0f, 0.0f, 0.0f);
+
+float g_player_speed = 3.0f;
+float g_ball_speed = 7.0f;
+
+bool singleplayer_mode = false;
 
 GLuint load_texture(const char* filepath)
 {
@@ -151,7 +170,11 @@ void process_input()
             case SDLK_q:
                 g_game_is_running = false;
                 break;
-
+            case SDLK_t:
+                if (!game_over) {
+                   singleplayer_mode = true;
+                }
+                
             default:
                 break;
             }
@@ -162,36 +185,45 @@ void process_input()
     }
 
     const Uint8* key_state = SDL_GetKeyboardState(NULL);
+    
+    if (!game_over) {
+        if (!singleplayer_mode) {
+            if (key_state[SDL_SCANCODE_S] && g_other_position[1] > -3.2f)
+            {
+                g_other_movement.y = -1.0f;
+            }
+            else if (key_state[SDL_SCANCODE_W] && g_other_position[1] < 3.2f)
+            {
+                g_other_movement.y = 1.0f;
+            }
+        }
 
-    if (key_state[SDL_SCANCODE_S] && g_other_position[1] > -3.2f)
-    {
-        g_other_movement.y = -1.0f;
+        if (key_state[SDL_SCANCODE_UP] && g_player_position[1] < 3.2f)
+        {
+            g_player_movement.y = 1.0f;
+        }
+        else if (key_state[SDL_SCANCODE_DOWN] && g_player_position[1] > -3.2f)
+        {
+            g_player_movement.y = -1.0f;
+        }
     }
-    else if (key_state[SDL_SCANCODE_W] && g_other_position[1] < 3.2f)
-    {
-        g_other_movement.y = 1.0f;
-    }
-
-    if (key_state[SDL_SCANCODE_UP] && g_player_position[1] < 3.2f)
-    {
-        g_player_movement.y = 1.0f;
-    }
-    else if (key_state[SDL_SCANCODE_DOWN] && g_player_position[1] > -3.2f)
-    {
-        g_player_movement.y = -1.0f;
-    }
+    
 
     
 }
 
 
-bool check_collision(glm::vec3& position_a, glm::vec3& position_b)
+bool check_collision(glm::vec3& position_ball, glm::vec3& position_player, glm::vec3& position_other)
 {
-    float x_distance = fabs(position_a[0] - position_b[0]) - 1;
-    float y_distance = fabs(position_a[1] - position_b[1]) - 1;
+    float x_distance_p = fabs(position_ball[0] - position_player[0]) - ((1 + 0.25) / 2);
+    float y_distance_p = fabs(position_ball [1] - position_player[1]) - ((1 + 0.25) / 2);
+    float x_distance_o = fabs(position_ball[0] - position_other[0]) - ((1 + 0.25) / 2);
+    float y_distance_o = fabs(position_ball[1] - position_other[1]) - ((1 + 0.25) / 2);
 
-    if (x_distance < 0.0f && y_distance < 0.0f)
-    {
+    if (x_distance_p < 0.0f && y_distance_p < 0.0f){
+        return true;
+    }
+    if (x_distance_o < 0.0f && y_distance_o < 0.0f){
         return true;
     }
     else {
@@ -210,15 +242,54 @@ void update()
     g_player_position += g_player_movement * g_player_speed * delta_time;
     g_model_matrix = glm::translate(g_model_matrix, g_player_position);
 
-    g_other_model_matrix = glm::mat4(1.0f);
-    g_other_position += g_other_movement * g_player_speed * delta_time;
-    g_other_model_matrix = glm::translate(g_other_model_matrix, g_other_position);
-
-    if (check_collision(g_player_position, g_other_position))
-    {
-        g_model_matrix = glm::mat4(1.0f);
+    if (!singleplayer_mode) {
+        g_other_model_matrix = glm::mat4(1.0f);
+        g_other_position += g_other_movement * g_player_speed * delta_time;
+        g_other_model_matrix = glm::translate(g_other_model_matrix, g_other_position);
+    }
+    else {
+        if (sin(ticks) > 0) { // Using sin for back and forth movement
+            g_other_movement = glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+        else {
+            g_other_movement = glm::vec3(0.0f, -1.0f, 0.0f);
+        }
+        g_other_model_matrix = glm::mat4(1.0f);
+        g_other_position += g_other_movement * g_player_speed * delta_time;
+        if (g_other_position[1] > 3.2f || g_other_position[1] < -3.2f) { 
+            // If second player about to go out of bounds, reverse movement direction
+            g_other_position += (g_other_movement *= glm::vec3(0.0f, -1.0f, 0.0f)) * g_player_speed * delta_time;
+        }
+        g_other_model_matrix = glm::translate(g_other_model_matrix, g_other_position);
     }
 
+    g_ball_matrix = glm::mat4(1.0f);
+    g_ball_position += g_ball_movement * g_ball_speed * delta_time;
+
+    if (check_collision(g_ball_position, g_player_position, g_other_position)) 
+        // Collision detection and bounce
+    {
+        g_ball_movement *= glm::vec3(-1.0f, 0.0f, 0.0f);
+        if (g_ball_position[1] < g_player_position[1] || g_ball_position[1] < g_other_position[1]) {
+            g_ball_movement += glm::vec3(0.0f, -1.0f, 0.0f);
+        }
+        else if (g_ball_position[1] > g_player_position[1] || g_ball_position[1] > g_other_position[1]) {
+            g_ball_movement += glm::vec3(0.0f, 1.0f, 0.0f);
+        }
+        g_ball_position += g_ball_movement * g_ball_speed * delta_time;
+    }
+    if (g_ball_position[1] > 3.2f) {
+        g_ball_movement *= glm::vec3(1.0f, -1.0f, 0.0f);
+    }
+    else if (g_ball_position[1] < -3.2f) {
+        g_ball_movement *= glm::vec3(1.0f, -1.0f, 0.0f);
+    }
+    
+    g_ball_matrix = glm::translate(g_ball_matrix, g_ball_position);
+    if (g_ball_position[0] > 6.0f || g_ball_position[0] < -6.0f) {
+        game_over = true;
+    }
+    g_ball_matrix = glm::scale(g_ball_matrix, glm::vec3(0.25f, 0.25f, 0.0f));
 }
 
 
@@ -251,6 +322,7 @@ void render()
 
     draw_object(g_model_matrix, g_player_texture_id);
     draw_object(g_other_model_matrix, g_other_texture_id);
+    draw_object(g_ball_matrix, g_ball_texture_id);
 
     glDisableVertexAttribArray(g_shader_program.positionAttribute);
     glDisableVertexAttribArray(g_shader_program.texCoordAttribute);
